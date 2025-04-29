@@ -54,8 +54,6 @@ paths:
                                 type: string
                             abstract:
                               type: string
-                        google_scholar_link:
-                          type: string
                         biorxiv_link:
                           type: string
 
