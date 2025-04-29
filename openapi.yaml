@@ -1,0 +1,32 @@
+openapi: 3.0.0
+info:
+  title: PubMed論文検索API
+  version: "1.0"
+paths:
+  /search_papers:
+    get:
+      summary: PubMedで論文を検索する
+      parameters:
+        - name: keyword
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 検索したいキーワード
+      responses:
+        '200':
+          description: 検索結果
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  papers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        pmid:
+                          type: string
+                        link:
+                          type: string
