@@ -1,5 +1,6 @@
 import requests
 from fastapi import FastAPI, Query
+from bs4 import BeautifulSoup
 from xml.etree import ElementTree as ET
 
 app = FastAPI()
@@ -90,21 +91,42 @@ def get_biorxiv_papers(keyword):
 # -------- Crossref検索 --------
 def get_crossref_metadata(doi):
     if doi == "DOI not found":
-        return {}
+        return {
+            "title": "",
+            "authors": [],
+            "journal": "",
+            "published": [],
+            "abstract": "（DOIが見つかりませんでした）"
+        }
 
     url = f"https://api.crossref.org/works/{doi}"
-    response = requests.get(url)
-    if response.status_code != 200:
-        return {"error": f"DOI {doi} not found"}
+    try:
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise ValueError(f"DOI {doi} not found")
+        data = response.json().get("message", {})
 
-    data = response.json()["message"]
-    return {
-        "title": data.get("title", [""])[0],
-        "authors": [f"{a.get('given', '')} {a.get('family', '')}" for a in data.get("author", [])],
-        "journal": data.get("container-title", [""])[0],
-        "published": data.get("issued", {}).get("date-parts", [[""]])[0],
-        "abstract": data.get("abstract", "（抄録はありません）")
-    }
+        # 抄録のHTMLタグを除去
+        raw_abstract = data.get("abstract", "（抄録はありません）")
+        soup = BeautifulSoup(raw_abstract, "html.parser")
+        abstract = soup.get_text()
+
+        return {
+            "title": data.get("title", [""])[0],
+            "authors": [f"{a.get('given', '')} {a.get('family', '')}" for a in data.get("author", [])],
+            "journal": data.get("container-title", [""])[0],
+            "published": data.get("issued", {}).get("date-parts", [[""]])[0],
+            "abstract": abstract
+        }
+
+    except Exception:
+        return {
+            "title": "",
+            "authors": [],
+            "journal": "",
+            "published": [],
+            "abstract": "（Crossrefメタデータ取得失敗）"
+        }
 
 
 @app.get("/get_metadata")
