@@ -3,7 +3,7 @@ info:
   title: PubMed論文検索API
   version: 1.0.0
 servers:
-  - url: https://pubmed-gpt-action.onrender.com/
+  - url: https://pubmed-gpt-action.onrender.com
 paths:
   /search_papers:
     get:
