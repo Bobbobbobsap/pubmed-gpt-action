@@ -55,7 +55,7 @@ def search_papers(keyword: str = Query(..., description="検索するキーワ�
         })
 
     # Google Scholar から検索結果を取得
-    google_scholar_papers = get_google_scholar_papers(keyword)
+    # google_scholar_papers = get_google_scholar_papers(keyword)
 
     # bioRxiv から検索結果を取得
     biorxiv_papers = get_biorxiv_papers(keyword)
