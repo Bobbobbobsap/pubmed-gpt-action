@@ -1,12 +1,13 @@
-openapi: 3.0.0
+openapi: 3.1.0
 info:
   title: PubMed論文検索API
-  version: "1.0"
+  version: "1.0.0"
 servers:
   - url: https://pubmed-gpt-action.onrender.com/
 paths:
   /search_papers:
     get:
+      operationId: searchPapers
       summary: PubMedで論文を検索する
       parameters:
         - name: keyword
