@@ -1,5 +1,6 @@
 import requests
 from fastapi import FastAPI, Query
+from xml.etree import ElementTree as ET
 
 app = FastAPI()
 
@@ -18,6 +19,7 @@ def search_papers(keyword: str = Query(..., description="検索するキーワ�
 
     pmids = data.get('esearchresult', {}).get('idlist', [])
     results = []
+
     for pmid in pmids:
         fetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
         fetch_params = {
@@ -27,10 +29,19 @@ def search_papers(keyword: str = Query(..., description="検索するキーワ�
         }
         fetch_response = requests.get(fetch_url, params=fetch_params)
         if fetch_response.status_code == 200:
-            results.append({
-                "pmid": pmid,
-                "link": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
-            })
+            try:
+                root = ET.fromstring(fetch_response.text)
+                title = root.findtext(".//ArticleTitle") or "タイトル取得失敗"
+            except Exception:
+                title = "タイトル取得失敗"
+        else:
+            title = "タイトル取得失敗"
+
+        results.append({
+            "pmid": pmid,
+            "title": title,
+            "link": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+        })
 
     return {"papers": results}
 
