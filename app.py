@@ -32,21 +32,35 @@ def search_papers(keyword: str = Query(..., description="検索するキーワ�
             try:
                 root = ET.fromstring(fetch_response.text)
                 title = root.findtext(".//ArticleTitle") or "タイトル取得失敗"
-            except Exception:
+                # DOIの取得
+                doi = root.findtext(".//ArticleId[@IdType='doi']")
+                if not doi:
+                    doi = "DOI not found"
+            except Exception as e:
                 title = "タイトル取得失敗"
+                doi = "DOI取得失敗"
         else:
             title = "タイトル取得失敗"
+            doi = "DOI取得失敗"
+
+        # Crossrefからメタデータを取得するためにDOIを渡す
+        metadata = get_crossref_metadata(doi) if doi != "DOI not found" else {}
 
         results.append({
             "pmid": pmid,
             "title": title,
-            "link": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+            "doi": doi,
+            "link": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
+            "crossref_metadata": metadata
         })
 
     return {"papers": results}
 
 # -------- Crossref検索 --------
 def get_crossref_metadata(doi):
+    if doi == "DOI not found":
+        return {}
+
     url = f"https://api.crossref.org/works/{doi}"
     response = requests.get(url)
     if response.status_code != 200:
