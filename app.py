@@ -14,7 +14,7 @@ def search_papers(keyword: str = Query(..., description="検索するキーワ�
         "db": "pubmed",
         "term": keyword,
         "retmode": "json",
-        "retmax": 10
+        "retmax": 50
     }
     response = requests.get(url, params=params)
     data = response.json()
