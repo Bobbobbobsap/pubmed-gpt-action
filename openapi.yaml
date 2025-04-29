@@ -33,3 +33,36 @@ paths:
                           type: string
                         link:
                           type: string
+  /get_metadata:
+      get:
+        operationId: getMetadata
+        summary: Get metadata from Crossref using DOI
+        parameters:
+          - name: doi
+            in: query
+            required: true
+            schema:
+              type: string
+            description: DOI（例：10.1038/s41586-020-2649-2）
+        responses:
+          '200':
+            description: Crossref論文情報
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                    authors:
+                      type: array
+                      items:
+                        type: string
+                    journal:
+                      type: string
+                    published:
+                      type: array
+                      items:
+                        type: string
+                    abstract:
+                      type: string
