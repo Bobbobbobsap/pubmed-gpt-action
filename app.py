@@ -4,6 +4,11 @@ from bs4 import BeautifulSoup
 from xml.etree import ElementTree as ET
 
 app = FastAPI()
+# --------- ウォームアップ用エンドポイント ---------
+
+@app.get("/ping")
+def ping():
+    return {"status": "ok"}
 
 # -------- PubMed検索 --------
 @app.get("/search_papers")
