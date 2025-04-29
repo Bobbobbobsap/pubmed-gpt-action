@@ -35,6 +35,26 @@ paths:
                           type: string
                         link:
                           type: string
+                        doi:
+                          type: string
+                        crossref_metadata:
+                          type: object
+                          properties:
+                            title:
+                              type: string
+                            authors:
+                              type: array
+                              items:
+                                type: string
+                            journal:
+                              type: string
+                            published:
+                              type: array
+                              items:
+                                type: string
+                            abstract:
+                              type: string
+
   /get_metadata:
     get:
       operationId: getMetadata
@@ -68,3 +88,4 @@ paths:
                       type: string
                   abstract:
                     type: string
+
