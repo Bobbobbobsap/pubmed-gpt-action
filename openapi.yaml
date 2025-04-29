@@ -8,7 +8,7 @@ paths:
   /search_papers:
     get:
       operationId: searchPapers
-      summary: PubMedで論文を検索する
+      summary: 複数のデータベース（PubMed、Google Scholar、bioRxiv）で論文を検索する
       parameters:
         - name: keyword
           in: query
@@ -54,11 +54,15 @@ paths:
                                 type: string
                             abstract:
                               type: string
+                        google_scholar_link:
+                          type: string
+                        biorxiv_link:
+                          type: string
 
   /get_metadata:
     get:
       operationId: getMetadata
-      summary: Get metadata from Crossref using DOI
+      summary: Crossref APIからDOIを基に論文メタデータを取得
       parameters:
         - name: doi
           in: query

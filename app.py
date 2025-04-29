@@ -1,12 +1,14 @@
 import requests
 from fastapi import FastAPI, Query
 from xml.etree import ElementTree as ET
+from scholarly import scholarly
 
 app = FastAPI()
 
 # -------- PubMed検索 --------
 @app.get("/search_papers")
 def search_papers(keyword: str = Query(..., description="検索するキーワード")):
+    # PubMed検索
     url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
     params = {
         "db": "pubmed",
@@ -20,6 +22,7 @@ def search_papers(keyword: str = Query(..., description="検索するキーワ�
     pmids = data.get('esearchresult', {}).get('idlist', [])
     results = []
 
+    # PubMedから詳細情報取得
     for pmid in pmids:
         fetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
         fetch_params = {
@@ -32,16 +35,13 @@ def search_papers(keyword: str = Query(..., description="検索するキーワ�
             try:
                 root = ET.fromstring(fetch_response.text)
                 title = root.findtext(".//ArticleTitle") or "タイトル取得失敗"
-                # DOIの取得
                 doi = root.findtext(".//ArticleId[@IdType='doi']")
-                if not doi:
-                    doi = "DOI not found"
-            except Exception as e:
+            except Exception:
                 title = "タイトル取得失敗"
-                doi = "DOI取得失敗"
+                doi = "DOI not found"
         else:
             title = "タイトル取得失敗"
-            doi = "DOI取得失敗"
+            doi = "DOI not found"
 
         # Crossrefからメタデータを取得するためにDOIを渡す
         metadata = get_crossref_metadata(doi) if doi != "DOI not found" else {}
@@ -54,7 +54,44 @@ def search_papers(keyword: str = Query(..., description="検索するキーワ�
             "crossref_metadata": metadata
         })
 
-    return {"papers": results}
+    # Google Scholar から検索結果を取得
+    google_scholar_papers = get_google_scholar_papers(keyword)
+
+    # bioRxiv から検索結果を取得
+    biorxiv_papers = get_biorxiv_papers(keyword)
+
+    # 結果を統合
+    all_papers = results + google_scholar_papers + biorxiv_papers
+
+    return {"papers": all_papers}
+
+
+# -------- Google Scholar検索 --------
+def get_google_scholar_papers(keyword):
+    search_query = scholarly.search_pubs(keyword)
+    results = []
+    for pub in search_query:
+        results.append({
+            "title": pub.get('bib', {}).get('title', 'No title'),
+            "link": pub.get('url', 'No link')
+        })
+    return results
+
+
+# -------- bioRxiv検索 --------
+def get_biorxiv_papers(keyword):
+    url = f"https://api.biorxiv.org/details/2022/03/01/{keyword}/json"
+    response = requests.get(url)
+    data = response.json()
+    
+    results = []
+    for item in data['collection']:
+        results.append({
+            "title": item.get('title', 'No title'),
+            "link": item.get('link', 'No link')
+        })
+    return results
+
 
 # -------- Crossref検索 --------
 def get_crossref_metadata(doi):
@@ -74,6 +111,7 @@ def get_crossref_metadata(doi):
         "published": data.get("issued", {}).get("date-parts", [[""]])[0],
         "abstract": data.get("abstract", "（抄録はありません）")
     }
+
 
 @app.get("/get_metadata")
 def get_metadata(doi: str = Query(..., description="DOI (Digital Object Identifier)")):
