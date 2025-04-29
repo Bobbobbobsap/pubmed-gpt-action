@@ -1,7 +1,6 @@
 import requests
 from fastapi import FastAPI, Query
 from xml.etree import ElementTree as ET
-from scholarly import scholarly
 
 app = FastAPI()
 
@@ -61,34 +60,29 @@ def search_papers(keyword: str = Query(..., description="検索するキーワ�
     biorxiv_papers = get_biorxiv_papers(keyword)
 
     # 結果を統合
-    all_papers = results + google_scholar_papers + biorxiv_papers
+    all_papers = results + biorxiv_papers
 
     return {"papers": all_papers}
 
 
-# -------- Google Scholar検索 --------
-def get_google_scholar_papers(keyword):
-    search_query = scholarly.search_pubs(keyword)
-    results = []
-    for pub in search_query:
-        results.append({
-            "title": pub.get('bib', {}).get('title', 'No title'),
-            "link": pub.get('url', 'No link')
-        })
-    return results
 
 
 # -------- bioRxiv検索 --------
 def get_biorxiv_papers(keyword):
     url = f"https://api.biorxiv.org/details/2022/03/01/{keyword}/json"
     response = requests.get(url)
-    data = response.json()
-    
+
+    try:
+        data = response.json()
+    except Exception:
+        return [{"title": "bioRxivデータ取得失敗", "link": "", "source": "bioRxiv"}]
+
     results = []
-    for item in data['collection']:
+    for item in data.get('collection', []):
         results.append({
             "title": item.get('title', 'No title'),
-            "link": item.get('link', 'No link')
+            "link": item.get('link', 'No link'),
+            "source": "bioRxiv"
         })
     return results
 
