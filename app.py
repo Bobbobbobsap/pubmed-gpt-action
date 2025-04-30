@@ -73,7 +73,7 @@ def search_papers(keyword: str = Query(..., description="検索するキーワ�
 def get_biorxiv_papers(keyword):
     url = f"https://api.biorxiv.org/details/2022/03/01/{keyword}/json"
     try:
-        response = requests.get(url, timeout=5)
+        response = requests.get(url)
         data = response.json()
     except Exception:
         return [{"title": "bioRxivデータ取得失敗", "link": "", "source": "bioRxiv"}]
