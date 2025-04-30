@@ -100,7 +100,7 @@ def get_crossref_metadata(doi):
 
     url = f"https://api.crossref.org/works/{doi}"
     try:
-        response = requests.get(url, timeout=5)
+        response = requests.get(url)
         if response.status_code != 200:
             raise ValueError(f"DOI {doi} not found")
         data = response.json().get("message", {})
