@@ -98,12 +98,19 @@ def get_crossref_metadata(doi):
             "abstract": "（DOIが見つかりませんでした）"
         }
 
+    doi = doi.strip()
     url = f"https://api.crossref.org/works/{doi}"
+    headers = {
+        "User-Agent": "PubMedGPT/1.0 (mailto:nagoyau.usuda@gmail.com)"  # ← 自分のメールに変更推奨
+    }
+
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers=headers, timeout=5)
         if response.status_code != 200:
-            raise ValueError(f"DOI {doi} not found")
+            raise ValueError(f"DOI {doi} returned status {response.status_code}")
         data = response.json().get("message", {})
+
+        # HTML除去（abstract）
         raw_abstract = data.get("abstract", "（抄録はありません）")
         soup = BeautifulSoup(raw_abstract, "html.parser")
         abstract = soup.get_text()
@@ -115,7 +122,9 @@ def get_crossref_metadata(doi):
             "published": data.get("issued", {}).get("date-parts", [[""]])[0],
             "abstract": abstract
         }
-    except Exception:
+
+    except Exception as e:
+        print(f"[Crossref ERROR] {doi}: {e}")
         return {
             "title": "",
             "authors": [],
@@ -123,6 +132,7 @@ def get_crossref_metadata(doi):
             "published": [],
             "abstract": "（Crossrefメタデータ取得失敗）"
         }
+
 
 @app.get("/get_metadata")
 def get_metadata(doi: str = Query(..., description="DOI (Digital Object Identifier)")):
