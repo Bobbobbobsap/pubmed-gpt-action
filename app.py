@@ -5,6 +5,24 @@ from xml.etree import ElementTree as ET
 
 app = FastAPI()
 
+
+@app.get("/test_crossref")
+def test_crossref():
+    url = "https://api.crossref.org/works/10.1038/s41586-020-2649-2"  # 安定して取得できるDOI
+    headers = {
+        "User-Agent": "PubMedGPT/1.0 (mailto:nagoyau.usuda@gmail.com)"  # ←自分の連絡先に変更
+    }
+
+    try:
+        response = requests.get(url, headers=headers, timeout=5)
+        return {
+            "status_code": response.status_code,
+            "ok": response.ok,
+            "snippet": response.text[:300]  # 応答の冒頭だけ確認
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
 # --------- ウォームアップ用エンドポイント ---------
 @app.get("/ping")
 def ping():
@@ -21,6 +39,9 @@ def search_papers(keyword: str = Query(..., description="検索するキーワ�
         "retmax": 5
     }
     try:
+        headers = {
+            "User-Agent": "PubMedGPT/1.0 (mailto:nagoyau.usuda@gmail.com)"
+        }
         response = requests.get(url, params=params, timeout=5)
         data = response.json()
     except Exception:
